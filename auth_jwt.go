@@ -149,8 +149,7 @@ var (
 
 // Login form structure.
 type Login struct {
-	Username string `form:"username" json:"username" binding:"required"`
-	Password string `form:"password" json:"password" binding:"required"`
+	Username string `form:"phoneNumber" json:"phoneNumber" binding:"required"`
 }
 
 func (mw *GinJWTMiddleware) readKeys() error {
