@@ -8,14 +8,22 @@ import (
 	"gopkg.in/dgrijalva/jwt-go.v3"
 )
 
-// Login form structure.
 type FirstStepLogin struct {
-	PhoneNumber string `form:"phoneNumber" json:"phoneNumber" binding:"required"`
+	PhoneNumber string `json:"phoneNumber" binding:"required"`
+	DeviceID    string `json:"deviceID binding:"required"`
+}
+
+type FirstStepLoginResponse struct {
+	Success bool `json:"success"`
+	Data struct {
+		Token string `json:"token"`
+		Expired string `json:"expired"`
+	} `json:"data"`
 }
 
 type FirstStepJWTMiddleware struct {
 	GinJWTMiddleware
-	Registrator func(phone string, c *gin.Context) (string, string, bool)
+	Registrator func(phone, deviceID string, c *gin.Context) (string, bool)
 }
 
 func (mw *FirstStepJWTMiddleware) LoginHandler(c *gin.Context) {
@@ -32,7 +40,7 @@ func (mw *FirstStepJWTMiddleware) LoginHandler(c *gin.Context) {
 		return
 	}
 
-	id, phone, ok := mw.Registrator(loginVals.PhoneNumber, c)
+	id, ok := mw.Registrator(loginVals.PhoneNumber, loginVals.DeviceID, c)
 
 	if !ok {
 		mw.unauthorized(c, http.StatusUnauthorized, mw.HTTPStatusMessageFunc(ErrFailedAuthentication, c))
@@ -49,13 +57,10 @@ func (mw *FirstStepJWTMiddleware) LoginHandler(c *gin.Context) {
 		}
 	}
 
-	if phone == "" {
-		phone = loginVals.PhoneNumber
-	}
-
 	expire := mw.TimeFunc().Add(mw.Timeout)
 	claims["id"] = id
-	claims["phone"] = phone
+	claims["phone"] = loginVals.PhoneNumber
+	claims["deviceID"] = loginVals.DeviceID
 	claims["exp"] = expire.Unix()
 	claims["orig_iat"] = mw.TimeFunc().Unix()
 	tokenString, err := mw.signedString(token)
@@ -65,9 +70,10 @@ func (mw *FirstStepJWTMiddleware) LoginHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":   http.StatusOK,
-		"token":  tokenString,
-		"expire": expire.Format(time.RFC3339),
-	})
+	response := FirstStepLoginResponse{}
+	response.Success = true
+	response.Data.Token = "Bearer " + tokenString
+	response.Data.Expired = expire.UTC().Format(time.RFC3339)
+
+	c.JSON(http.StatusOK, response)
 }
