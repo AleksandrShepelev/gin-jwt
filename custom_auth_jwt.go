@@ -38,7 +38,7 @@ func (mw *FirstStepJWTMiddleware) LoginHandler(c *gin.Context) {
 	var loginVals FirstStepLogin
 
 	if c.ShouldBindWith(&loginVals, binding.JSON) != nil {
-		mw.unauthorized(c, http.StatusBadRequest, mw.HTTPStatusMessageFunc(errors.New("Missing phoneNumber or deviceID"), c))
+		mw.unauthorized(c, http.StatusBadRequest, mw.HTTPStatusMessageFunc(errors.New("missing phoneNumber or deviceID"), c))
 		return
 	}
 
@@ -110,14 +110,14 @@ func (mw *SecondStepJWTMiddleware) LoginHandler(c *gin.Context) {
 	var loginVals SecondStepLogin
 
 	if c.ShouldBindWith(&loginVals, binding.JSON) != nil {
-		mw.unauthorized(c, http.StatusBadRequest, mw.HTTPStatusMessageFunc(errors.New("Missing otp"), c))
+		mw.unauthorized(c, http.StatusBadRequest, mw.HTTPStatusMessageFunc(errors.New("missing otp"), c))
 		return
 	}
 
-	_, ok := mw.OtpValidator(loginVals.Otp, c)
+	msg, ok := mw.OtpValidator(loginVals.Otp, c)
 
 	if !ok {
-		mw.unauthorized(c, http.StatusUnauthorized, mw.HTTPStatusMessageFunc(errors.New("Invalid otp"), c))
+		mw.unauthorized(c, http.StatusUnauthorized, mw.HTTPStatusMessageFunc(errors.New(msg), c))
 		return
 	}
 
