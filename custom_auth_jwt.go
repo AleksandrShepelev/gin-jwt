@@ -146,7 +146,45 @@ func (mw *SecondStepJWTMiddleware) LoginHandler(c *gin.Context) {
 		return
 	}
 
-	response := FirstStepLoginResponse{}
+	response := SecondStepLoginResponse{}
+	response.Success = true
+	response.Data.Token = "Bearer " + tokenString
+	response.Data.Expired = expire.UTC().Format(time.RFC3339)
+
+	c.JSON(http.StatusOK, response)
+}
+
+func (mw *SecondStepJWTMiddleware) RefreshHandler(c *gin.Context) {
+	token, _ := mw.parseToken(c)
+	claims := token.Claims.(jwt.MapClaims)
+
+	origIat := int64(claims["orig_iat"].(float64))
+
+	if origIat < mw.TimeFunc().Add(-mw.MaxRefresh).Unix() {
+		mw.unauthorized(c, http.StatusUnauthorized, mw.HTTPStatusMessageFunc(ErrExpiredToken, c))
+		return
+	}
+
+	// Create the token
+	newToken := jwt.New(jwt.GetSigningMethod(mw.SigningAlgorithm))
+	newClaims := newToken.Claims.(jwt.MapClaims)
+
+	for key := range claims {
+		newClaims[key] = claims[key]
+	}
+
+	expire := mw.TimeFunc().Add(mw.Timeout)
+	newClaims["id"] = claims["id"]
+	newClaims["exp"] = expire.Unix()
+	newClaims["orig_iat"] = origIat
+	tokenString, err := mw.signedString(newToken)
+
+	if err != nil {
+		mw.unauthorized(c, http.StatusUnauthorized, mw.HTTPStatusMessageFunc(ErrFailedTokenCreation, c))
+		return
+	}
+
+	response := SecondStepLoginResponse{}
 	response.Success = true
 	response.Data.Token = "Bearer " + tokenString
 	response.Data.Expired = expire.UTC().Format(time.RFC3339)
