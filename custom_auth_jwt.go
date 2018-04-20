@@ -155,7 +155,10 @@ func (mw *SecondStepJWTMiddleware) LoginHandler(c *gin.Context) {
 }
 
 func (mw *SecondStepJWTMiddleware) RefreshHandler(c *gin.Context) {
-	token, _ := mw.parseToken(c)
+	token, err := mw.parseToken(c)
+	if err != nil {
+		mw.unauthorized(c, http.StatusBadRequest, mw.HTTPStatusMessageFunc(ErrInvalidAuthHeader, c))
+	}
 	claims := token.Claims.(jwt.MapClaims)
 
 	origIat := int64(claims["orig_iat"].(float64))
