@@ -80,7 +80,6 @@ func (mw *FirstStepJWTMiddleware) LoginHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-
 type SecondStepLogin struct {
 	Otp string `json:"otp" binding:"required"`
 }
@@ -93,7 +92,6 @@ type SecondStepLoginResponse struct {
 	} `json:"data"`
 	Error string `json:"error"`
 }
-
 
 type SecondStepJWTMiddleware struct {
 	GinJWTMiddleware
@@ -158,6 +156,7 @@ func (mw *SecondStepJWTMiddleware) RefreshHandler(c *gin.Context) {
 	token, err := mw.parseToken(c)
 	if err != nil {
 		mw.unauthorized(c, http.StatusBadRequest, mw.HTTPStatusMessageFunc(ErrInvalidAuthHeader, c))
+		return
 	}
 	claims := token.Claims.(jwt.MapClaims)
 
