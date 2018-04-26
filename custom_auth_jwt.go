@@ -45,7 +45,7 @@ func (mw *FirstStepJWTMiddleware) LoginHandler(c *gin.Context) {
 	id, ok := mw.Registrator(loginVals.PhoneNumber, loginVals.DeviceID, c)
 
 	if !ok {
-		mw.unauthorized(c, http.StatusUnauthorized, mw.HTTPStatusMessageFunc(ErrFailedAuthentication, c))
+		mw.unauthorized(c, http.StatusUnauthorized, mw.HTTPStatusMessageFunc(errors.New("failed to get or create user"), c))
 		return
 	}
 
