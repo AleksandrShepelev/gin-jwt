@@ -154,7 +154,7 @@ func (mw *SecondStepJWTMiddleware) LoginHandler(c *gin.Context) {
 
 func (mw *SecondStepJWTMiddleware) RefreshHandler(c *gin.Context) {
 	token, err := mw.parseToken(c)
-	if err != nil {
+	if err != nil && err.(*jwt.ValidationError).Errors != jwt.ValidationErrorExpired {
 		mw.unauthorized(c, http.StatusBadRequest, mw.HTTPStatusMessageFunc(ErrInvalidAuthHeader, c))
 		return
 	}
