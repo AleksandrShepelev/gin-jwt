@@ -115,7 +115,7 @@ func (mw *SecondStepJWTMiddleware) LoginHandler(c *gin.Context) {
 	msg, ok := mw.OtpValidator(loginVals.Otp, c)
 
 	if !ok {
-		mw.unauthorized(c, http.StatusUnauthorized, mw.HTTPStatusMessageFunc(errors.New(msg), c))
+		mw.unauthorized(c, http.StatusForbidden, mw.HTTPStatusMessageFunc(errors.New(msg), c))
 		return
 	}
 
