@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"gopkg.in/dgrijalva/jwt-go.v3"
 	"errors"
+	"regexp"
 )
 
 type FirstStepLogin struct {
@@ -21,6 +22,16 @@ type FirstStepLoginResponse struct {
 		Expired string `json:"expired"`
 	} `json:"data"`
 	Error string `json:"error"`
+}
+
+func normalizeNumber(phone string) string {
+	trimPhone := ""
+	re := regexp.MustCompile("[0-9]+")
+	submatchall := re.FindAllString(phone, -1)
+	for _, element := range submatchall {
+		trimPhone += element
+	}
+	return trimPhone
 }
 
 type FirstStepJWTMiddleware struct {
@@ -41,6 +52,8 @@ func (mw *FirstStepJWTMiddleware) LoginHandler(c *gin.Context) {
 		mw.unauthorized(c, http.StatusBadRequest, mw.HTTPStatusMessageFunc(errors.New("missing phoneNumber or deviceID"), c))
 		return
 	}
+
+	loginVals.PhoneNumber = normalizeNumber(loginVals.PhoneNumber)
 
 	id, ok := mw.Registrator(loginVals.PhoneNumber, loginVals.DeviceID, c)
 
