@@ -11,7 +11,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"gopkg.in/dgrijalva/jwt-go.v3"
-	"fmt"
 )
 
 // GinJWTMiddleware provides a Json-Web-Token authentication implementation. On failure, a 401 HTTP response
@@ -453,8 +452,8 @@ func (mw *GinJWTMiddleware) TokenGenerator(userID string) (string, time.Time, er
 
 func (mw *GinJWTMiddleware) jwtFromHeader(c *gin.Context, key string) (string, error) {
 	authHeader := c.Request.Header.Get(key)
- 	if authHeader == "" {
- 		return "", ErrEmptyAuthHeader
+	if authHeader == "" {
+		return "", ErrEmptyAuthHeader
 	}
 
 	parts := strings.SplitN(authHeader, " ", 2)
@@ -490,7 +489,7 @@ func (mw *GinJWTMiddleware) parseToken(c *gin.Context) (*jwt.Token, error) {
 	var err error
 
 	parts := strings.Split(mw.TokenLookup, ":")
- 	switch parts[0] {
+	switch parts[0] {
 	case "header":
 		token, err = mw.jwtFromHeader(c, parts[1])
 	case "query":
