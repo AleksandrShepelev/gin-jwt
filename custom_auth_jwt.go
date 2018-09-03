@@ -167,12 +167,13 @@ func (mw *SecondStepJWTMiddleware) LoginHandler(c *gin.Context) {
 
 func (mw *SecondStepJWTMiddleware) RefreshHandler(c *gin.Context) {
 	token, err := mw.parseToken(c)
+
 	if err != nil {
 		valErr, ok := err.(*jwt.ValidationError)
 		if ok && valErr.Errors != jwt.ValidationErrorExpired {
 			mw.unauthorized(c, http.StatusUnauthorized, mw.HTTPStatusMessageFunc(ErrInvalidAuthHeader, c))
 			return
-		} else {
+		} else if !ok {
 			mw.unauthorized(c, http.StatusUnauthorized, mw.HTTPStatusMessageFunc(err, c))
 			return
 		}
@@ -183,7 +184,7 @@ func (mw *SecondStepJWTMiddleware) RefreshHandler(c *gin.Context) {
 	origIat := int64(claims["orig_iat"].(float64))
 
 	if origIat < mw.TimeFunc().Add(-mw.MaxRefresh).Unix() {
-		mw.unauthorized(c, http.StatusUnauthorized, mw.HTTPStatusMessageFunc(ErrExpiredToken, c))
+		mw.unauthorized(c, http.StatusForbidden, mw.HTTPStatusMessageFunc(ErrExpiredToken, c))
 		return
 	}
 
